@@ -40,7 +40,15 @@ class _PixabayPageState extends State<PixabayPage> {
     // await で待つことで Future が外れ Response 型のデータを受け取ることができました。
     // 中身を書き換えたくない値については final をつける
     final response = await Dio().get(
-      'https://pixabay.com/api/?key=40700765-9428eb4a08095a96bfdc7219d&q=$text&image_type=photo&pretty=true',
+      // 'https://pixabay.com/api/?key=40700765-9428eb4a08095a96bfdc7219d&q=$text&image_type=photo&pretty=true',
+      'https://pixabay.com/api',
+      queryParameters: {
+        'key': '0700765-9428eb4a08095a96bfdc7219d',
+        'q': text,
+        'image_type': 'photo',
+        'pretty': true,
+        'per_page': 100,
+      },
     );
 
     imageList = response.data['hits'];
