@@ -55,6 +55,29 @@ class _PixabayPageState extends State<PixabayPage> {
     setState(() {});
   }
 
+  Future<void> shareImage(String url) async {
+    // まずは一時保存に使えるフォルダ情報を取得します。
+    // Future 型なので await で待ちます
+    final dir = await getTemporaryDirectory();
+
+    final response = await Dio().get(
+      // previewURL は荒いためより高解像度の webformatURL から画像をダウンロードします。
+      url,
+      options: Options(
+        // 画像をダウンロードするときは ResponseType.bytes を指定します。
+        responseType: ResponseType.bytes,
+      ),
+    );
+
+    // フォルダの中に image.png という名前でファイルを作り、そこに画像データを書き込みます。
+    final imageFile =
+        await File('${dir.path}/image.png').writeAsBytes(response.data);
+    // final files = <XFile>[];
+    XFile xfile = XFile(imageFile.path);
+    // files.add(xfile);
+    await Share.shareXFiles([xfile]);
+  }
+
   // この関数の中の処理は初回に一度だけ実行されます。
   @override
   void initState() {
@@ -96,26 +119,7 @@ class _PixabayPageState extends State<PixabayPage> {
           // URLをつかった画像表示は Image.network(表示したいURL) で実装できます。
           return InkWell(
             onTap: () async {
-              // まずは一時保存に使えるフォルダ情報を取得します。
-              // Future 型なので await で待ちます
-              final dir = await getTemporaryDirectory();
-
-              final response = await Dio().get(
-                // previewURL は荒いためより高解像度の webformatURL から画像をダウンロードします。
-                image['webformatURL'],
-                options: Options(
-                  // 画像をダウンロードするときは ResponseType.bytes を指定します。
-                  responseType: ResponseType.bytes,
-                ),
-              );
-
-              // フォルダの中に image.png という名前でファイルを作り、そこに画像データを書き込みます。
-              final imageFile = await File('${dir.path}/image.png')
-                  .writeAsBytes(response.data);
-              // final files = <XFile>[];
-              XFile xfile = XFile(imageFile.path);
-              // files.add(xfile);
-              await Share.shareXFiles([xfile]);
+              shareImage(image['webformatURL']);
             },
             child: Stack(
               // StackFit.expand を与えると領域いっぱいに広がろうとします。
