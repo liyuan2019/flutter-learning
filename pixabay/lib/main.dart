@@ -43,7 +43,7 @@ class _PixabayPageState extends State<PixabayPage> {
       // 'https://pixabay.com/api/?key=40700765-9428eb4a08095a96bfdc7219d&q=$text&image_type=photo&pretty=true',
       'https://pixabay.com/api',
       queryParameters: {
-        'key': '0700765-9428eb4a08095a96bfdc7219d',
+        'key': '40700765-9428eb4a08095a96bfdc7219d',
         'q': text,
         'image_type': 'photo',
         'pretty': true,
@@ -55,6 +55,8 @@ class _PixabayPageState extends State<PixabayPage> {
     final List hits = response.data['hits'];
     // map メソッドを使って Map<String, dynamic> の型を一つひとつ PixabayImage 型に変換していきます。
     pixabayImages = hits.map((e) => PixabayImage.fromMap(e)).toList();
+    // いいねが多い順に並べ替え
+    pixabayImages.sort((a, b) => b.likes.compareTo(a.likes));
     setState(() {});
   }
 
