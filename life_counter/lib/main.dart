@@ -32,6 +32,11 @@ class LifeCounterPage extends StatefulWidget {
 }
 
 class _LifeCounterPageState extends State<LifeCounterPage> {
+  // ObjectBoxを利用するにはまず store が必要になります
+  // ですが store を作成するには openStore という非同期関数の実行が必要です
+  // なのでこの段階で初期値として store を代入することはできません
+  // そのためまずは null を入れる必要があります
+  // 変数に null が入ることを許容するには Store? のように ? をつければよいです
   Store? store;
   Box<LifeEvent>? lifeEventBox;
   List<LifeEvent> lifeEvents = [];
@@ -42,6 +47,7 @@ class _LifeCounterPageState extends State<LifeCounterPage> {
     fetchLifeEvents();
   }
 
+  /// Box から LifeEvent 一覧を取得します
   void fetchLifeEvents() {
     lifeEvents = lifeEventBox?.getAll() ?? [];
     setState(() {});
@@ -60,7 +66,7 @@ class _LifeCounterPageState extends State<LifeCounterPage> {
         title: const Text('人生カウンター'),
       ),
       body: ListView.builder(
-        itemCount: lifeEvents.length,
+        itemCount: lifeEvents.length, // ここには必ずListの総数を与えてください
         itemBuilder: (context, index) {
           final lifeEvent = lifeEvents[index];
           return Padding(
@@ -87,6 +93,21 @@ class _LifeCounterPageState extends State<LifeCounterPage> {
                     fetchLifeEvents();
                   },
                   icon: const Icon(Icons.plus_one),
+                ),
+                IconButton(
+                  onPressed: () {
+                    lifeEvent.count--;
+                    lifeEventBox?.put(lifeEvent);
+                    fetchLifeEvents();
+                  },
+                  icon: const Icon(Icons.exposure_minus_1),
+                ),
+                IconButton(
+                  onPressed: () {
+                    lifeEventBox?.remove(lifeEvent.id);
+                    fetchLifeEvents();
+                  },
+                  icon: const Icon(Icons.delete),
                 ),
               ],
             ),
