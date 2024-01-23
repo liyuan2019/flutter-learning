@@ -39,6 +39,10 @@ class _LifeCounterPageState extends State<LifeCounterPage> {
   Future<void> initialize() async {
     store = await openStore();
     lifeEventBox = store?.box<LifeEvent>();
+    fetchLifeEvents();
+  }
+
+  void fetchLifeEvents() {
     lifeEvents = lifeEventBox?.getAll() ?? [];
     setState(() {});
   }
@@ -76,8 +80,7 @@ class _LifeCounterPageState extends State<LifeCounterPage> {
           // 受け取った値を ObjectBox に保存
           if (newLifeEvent != null) {
             lifeEventBox?.put(newLifeEvent);
-            lifeEvents = lifeEventBox?.getAll() ?? [];
-            setState(() {});
+            fetchLifeEvents();
           }
         },
       ),
