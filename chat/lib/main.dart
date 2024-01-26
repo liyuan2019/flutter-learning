@@ -1,10 +1,12 @@
 import 'package:chat/firebase_options.dart';
+import 'package:chat/my_page.dart';
 import 'package:chat/post.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:intl/intl.dart';
 
 Future<void> main() async {
   // main 関数でも async が使えます
@@ -21,10 +23,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(),
-      home: const SignInPage(),
-    );
+    // currentUser が null であればログインしていません。
+    if (FirebaseAuth.instance.currentUser == null) {
+      // 未ログイン
+      return MaterialApp(
+        theme: ThemeData(),
+        home: const SignInPage(),
+      );
+    } else {
+      // ログイン中
+      return MaterialApp(
+        theme: ThemeData(),
+        home: const ChatPage(),
+      );
+    }
   }
 }
 
@@ -104,6 +116,26 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('チャット'),
+        // actions プロパティにWidgetを与えると右端に表示されます。
+        actions: [
+          // tap 可能にするために InkWell を使います。
+          InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const MyPage();
+                  },
+                ),
+              );
+            },
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(
+                FirebaseAuth.instance.currentUser!.photoURL!,
+              ),
+            ),
+          )
+        ],
       ),
       body: Column(
         children: [
@@ -124,7 +156,7 @@ class _ChatPageState extends State<ChatPage> {
                     // これは withConverter を使ったことにより得られる恩恵です。
                     // 何もしなければこのデータ型は Map になります。
                     final post = docs[index].data();
-                    return Text(post.text);
+                    return PostWidget(post: post);
                   },
                 );
               },
@@ -157,6 +189,81 @@ class _ChatPageState extends State<ChatPage> {
               // 通常は Map しか受け付けませんが、withConverter を使用したことにより Post インスタンスを受け取れるようになります。
               newDocumentReference.set(newPost);
             },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PostWidget extends StatelessWidget {
+  const PostWidget({
+    super.key,
+    required this.post,
+  });
+
+  final Post post;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: NetworkImage(
+              post.posterImageUrl,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      post.posterName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      // toDate() で Timestamp から DateTime に変換できます。
+                      DateFormat('MM/dd HH:mm').format(post.createdAt.toDate()),
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    // 角丸にするにはこれを追加します。
+                    // 4 の数字を大きくするともっと丸くなります。
+                    borderRadius: BorderRadius.circular(4),
+                    // 色はここで変えられます
+                    // [100] この数字を小さくすると色が薄くなります。
+                    // [条件式] ? A : B の三項演算子を使っています。
+                    color:
+                        FirebaseAuth.instance.currentUser!.uid == post.posterId
+                            ? Colors.amber[100]
+                            : Colors.blue[100],
+                  ),
+                  child: Text(post.text),
+                ),
+                // List の中の場合は if 文であっても {} この波かっこはつけなくてよい
+                if (FirebaseAuth.instance.currentUser!.uid == post.posterId)
+                  IconButton(
+                    onPressed: () {
+                      // 削除は reference に対して delete() を呼ぶだけでよい。
+                      post.reference.delete();
+                    },
+                    icon: const Icon(Icons.delete),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
