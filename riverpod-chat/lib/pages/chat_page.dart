@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +6,6 @@ import '../models/post/post.dart';
 import '../providers/posts_provider.dart';
 import '../references.dart';
 import '../widgets/post_widget.dart';
-import 'profile_page.dart';
 
 // StatefulWidget を ConsumerStatefulWidget に変更
 class ChatPage extends ConsumerStatefulWidget {
