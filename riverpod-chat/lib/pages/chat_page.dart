@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/post/post.dart';
+import '../providers/posts_provider.dart';
 import '../references.dart';
 import '../widgets/post_widget.dart';
 import 'profile_page.dart';
 
+// StatefulWidget を ConsumerStatefulWidget に変更
 class ChatPage extends ConsumerStatefulWidget {
   const ChatPage({super.key});
 
@@ -69,7 +71,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) {
-                      return const ProfilePage();
+                      // return const ProfilePage();
+                      return const ChatPage();
                     },
                   ),
                 );
@@ -85,30 +88,58 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         body: Column(
           children: [
             Expanded(
-              child: StreamBuilder<QuerySnapshot<Post>>(
-                // stream プロパティに snapshots() を与えると、コレクションの中のドキュメントをリアルタイムで監視することができます。
-                stream: postsReferenceWithConverter
-                    .orderBy('createdAt')
-                    .snapshots(),
-                // ここで受け取っている snapshot に stream で流れてきたデータ入っています。
-                builder: (context, snapshot) {
-                  // docs には Collection に保存されたすべてのドキュメントが入ります。
-                  // 取得までには時間がかかるのではじめは null が入っています。
-                  // null の場合は空配列が代入されるようにしています。
-                  final docs = snapshot.data?.docs ?? [];
+              // WidgetRef で postsProvider を watch
+              // when メソッドを使うことによって正常取得、エラー、ローディングの 3 つの条件に分岐させ適切な Widget を表示させることができます
+              child: ref.watch(postsProvider).when(
+                data: (data) {
+                  /// 値が取得できた場合に呼ばれる。
                   return ListView.builder(
-                    itemCount: docs.length,
+                    itemCount: data.docs.length,
                     itemBuilder: (context, index) {
-                      // data() に Post インスタンスが入っています。
-                      // これは withConverter を使ったことにより得られる恩恵です。
-                      // 何もしなければこのデータ型は Map になります。
-                      final post = docs[index].data();
+                      final post = data.docs[index].data();
                       return PostWidget(post: post);
                     },
                   );
                 },
+                error: (_, __) {
+                  /// 読み込み中にErrorが発生した場合に呼ばれる。
+                  return const Center(
+                    child: Text('不具合が発生しました。'),
+                  );
+                },
+                loading: () {
+                  /// 読み込み中の場合に呼ばれる。
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
               ),
             ),
+            // Expanded(
+            //   child: StreamBuilder<QuerySnapshot<Post>>(
+            //     // stream プロパティに snapshots() を与えると、コレクションの中のドキュメントをリアルタイムで監視することができます。
+            //     stream: postsReferenceWithConverter
+            //         .orderBy('createdAt')
+            //         .snapshots(),
+            //     // ここで受け取っている snapshot に stream で流れてきたデータ入っています。
+            //     builder: (context, snapshot) {
+            //       // docs には Collection に保存されたすべてのドキュメントが入ります。
+            //       // 取得までには時間がかかるのではじめは null が入っています。
+            //       // null の場合は空配列が代入されるようにしています。
+            //       final docs = snapshot.data?.docs ?? [];
+            //       return ListView.builder(
+            //         itemCount: docs.length,
+            //         itemBuilder: (context, index) {
+            //           // data() に Post インスタンスが入っています。
+            //           // これは withConverter を使ったことにより得られる恩恵です。
+            //           // 何もしなければこのデータ型は Map になります。
+            //           final post = docs[index].data();
+            //           return PostWidget(post: post);
+            //         },
+            //       );
+            //     },
+            //   ),
+            // ),
             Padding(
               padding: const EdgeInsets.all(8),
               child: TextFormField(
