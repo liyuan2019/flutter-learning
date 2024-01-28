@@ -1,10 +1,13 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'firebase_options.dart';
 import 'pages/chat_page.dart';
 import 'pages/sing_in_page.dart';
+import 'providers/firestore_provider.dart';
 
 Future<void> main() async {
   // main 関数でも async が使えます
@@ -13,7 +16,16 @@ Future<void> main() async {
     // これが Firebase の初期化処理です。
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(
+
+      /// Riverpodをつかうために必要
+      ProviderScope(
+    overrides: [
+      /// これだけでFirebaseFirestoreのモックを注入できる。
+      firestoreProvider.overrideWithValue(FakeFirebaseFirestore()),
+    ],
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
